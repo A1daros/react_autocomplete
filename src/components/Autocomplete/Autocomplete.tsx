@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './Autocomplete.scss';
 import debounce from 'lodash.debounce';
-import { peopleFromServer } from '../../data/people';
 import { Person } from '../../types/Person';
 
 interface Props {
@@ -10,7 +9,11 @@ interface Props {
   onSelected?: (person: Person | null) => void;
 }
 
-export const Autocomplete: React.FC<Props> = ({ delay = 300, onSelected }) => {
+export const Autocomplete: React.FC<Props> = ({
+  people,
+  delay = 300,
+  onSelected,
+}) => {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -23,25 +26,25 @@ export const Autocomplete: React.FC<Props> = ({ delay = 300, onSelected }) => {
     debouncedSetQuery(query);
   }, [debouncedSetQuery, query]);
 
-  const trimmedDebouncedQuery = debouncedQuery.trim();
-
   const filteredPeople = useMemo(() => {
-    if (!trimmedDebouncedQuery) {
-      return peopleFromServer;
+    const trimmed = debouncedQuery.trim();
+
+    if (!trimmed) {
+      return people;
     }
 
-    return peopleFromServer.filter(person => {
-      return person.name
-        .toLowerCase()
-        .includes(trimmedDebouncedQuery.toLowerCase());
+    return people.filter(person => {
+      return person.name.toLowerCase().includes(trimmed.toLowerCase());
     });
-  }, [trimmedDebouncedQuery]);
+  }, [people, debouncedQuery]);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
 
     setQuery(value);
-    onSelected?.(null);
+    if (value !== query) {
+      onSelected?.(null);
+    }
   };
 
   const handleSelect = (person: Person) => {
